@@ -1,74 +1,75 @@
-const express = require('express');
-const cors = require('cors');
-const fetch = require('node-fetch');
+var express = require('express');
+var cors = require('cors');
+var https = require('https');
 
-const app = express();
+var app = express();
 app.use(cors());
 app.use(express.json());
 
-const GHL_API = 'https://rest.gohighlevel.com/v1';
-const GHL_TOKEN = 'pit-09f20811-7b00-4c3f-9fc3-d8cb1b838b5e';
-const GHL_LOCATION = 'hFAagQwWGZ8zHNUCtv0c';
+var GHL_TOKEN = 'pit-09f20811-7b00-4c3f-9fc3-d8cb1b838b5e';
+var GHL_LOCATION = 'hFAagQwWGZ8zHNUCtv0c';
+
+function ghlRequest(path, method, body, callback) {
+  var options = {
+    hostname: 'rest.gohighlevel.com',
+    path: '/v1' + path,
+    method: method,
+    headers: {
+      'Authorization': 'Bearer ' + GHL_TOKEN,
+      'Content-Type': 'application/json'
+    }
+  };
+  
+  var req = https.request(options, function(res) {
+    var data = '';
+    res.on('data', function(chunk) { data += chunk; });
+    res.on('end', function() {
+      try { callback(null, JSON.parse(data)); }
+      catch(e) { callback(null, { raw: data }); }
+    });
+  });
+  
+  req.on('error', function(e) { callback(e); });
+  if (body) req.write(JSON.stringify(body));
+  req.end();
+}
 
 app.get('/', function(req, res) {
-  res.json({ status: 'Hydr801 Backend Running', time: new Date().toISOString() });
+  res.json({ status: 'Hydr801 Backend Running' });
 });
 
 app.get('/api/health', function(req, res) {
-  res.json({ status: 'ok', time: new Date().toISOString() });
+  res.json({ status: 'ok' });
 });
 
 app.get('/api/ghl/contacts', function(req, res) {
-  fetch(GHL_API + '/contacts?limit=20&locationId=' + GHL_LOCATION, {
-    headers: { 'Authorization': 'Bearer ' + GHL_TOKEN }
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) { res.json(data); })
-  .catch(function(e) { res.status(500).json({ error: e.message }); });
+  ghlRequest('/contacts?limit=20&locationId=' + GHL_LOCATION, 'GET', null, function(err, data) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(data);
+  });
 });
 
 app.post('/api/ghl/contacts', function(req, res) {
   var body = req.body;
   body.locationId = GHL_LOCATION;
-  fetch(GHL_API + '/contacts', {
-    method: 'POST',
-    headers: { 
-      'Authorization': 'Bearer ' + GHL_TOKEN, 
-      'Content-Type': 'application/json' 
-    },
-    body: JSON.stringify(body)
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) { res.json(data); })
-  .catch(function(e) { res.status(500).json({ error: e.message }); });
+  ghlRequest('/contacts', 'POST', body, function(err, data) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(data);
+  });
 });
 
 app.post('/api/ghl/contacts/:id/notes', function(req, res) {
-  fetch(GHL_API + '/contacts/' + req.params.id + '/notes', {
-    method: 'POST',
-    headers: { 
-      'Authorization': 'Bearer ' + GHL_TOKEN, 
-      'Content-Type': 'application/json' 
-    },
-    body: JSON.stringify(req.body)
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) { res.json(data); })
-  .catch(function(e) { res.status(500).json({ error: e.message }); });
+  ghlRequest('/contacts/' + req.params.id + '/notes', 'POST', req.body, function(err, data) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(data);
+  });
 });
 
 app.post('/api/ghl/contacts/:id/tags', function(req, res) {
-  fetch(GHL_API + '/contacts/' + req.params.id + '/tags', {
-    method: 'POST',
-    headers: { 
-      'Authorization': 'Bearer ' + GHL_TOKEN, 
-      'Content-Type': 'application/json' 
-    },
-    body: JSON.stringify(req.body)
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) { res.json(data); })
-  .catch(function(e) { res.status(500).json({ error: e.message }); });
+  ghlRequest('/contacts/' + req.params.id + '/tags', 'POST', req.body, function(err, data) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(data);
+  });
 });
 
 var PORT = process.env.PORT || 3001;
