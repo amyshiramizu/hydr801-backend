@@ -6,7 +6,7 @@ var app = express();
 app.use(cors());
 app.use(express.json());
 
-var GHL_TOKEN = 'pit-09f20811-7b00-4c3f-9fc3-d8cb1b838b5e';
+var GHL_TOKEN = 'pit-1f5872ee-67b9-4397-b949-043d389e63bc';
 var GHL_LOCATION = 'hFAagQwWGZ8zHNUCtv0c';
 
 function ghlRequest(path, method, body, callback) {
