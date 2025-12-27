@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hydr801 EMR</title>
+<title>Hydr801 EMR - Podium</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,-apple-system,sans-serif;background:#f5f7fa}
 .container{max-width:800px;margin:40px auto;padding:20px}
 .card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);padding:24px;margin-bottom:20px}
-h1{color:#1a56db;margin-bottom:20px}
+h1{color:#1a56db;margin-bottom:8px}
 h2{color:#333;margin-bottom:16px;font-size:18px}
+.subtitle{color:#666;margin-bottom:20px}
 .form-group{margin-bottom:16px}
 label{display:block;font-size:12px;color:#666;margin-bottom:6px;text-transform:uppercase}
 input[type="text"]{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:14px}
-.btn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500}
+.btn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;margin-right:10px}
 .btn-primary{background:#1a56db;color:#fff}
-.btn-primary:hover{background:#1e429f}
-.btn-orange{background:#ff6b35;color:#fff}
+.btn-purple{background:#7c3aed;color:#fff}
 .status{padding:16px;border-radius:8px;margin:16px 0}
 .status-ok{background:#d1fae5;color:#065f46}
 .status-err{background:#fee2e2;color:#991b1b}
@@ -35,114 +35,38 @@ input[type="text"]{width:100%;padding:12px;border:1px solid #ddd;border-radius:8
 <div class="container">
 <div class="card">
 <h1>Hydr801 EMR</h1>
-<p style="color:#666;margin-bottom:20px">GoHighLevel Integration</p>
-
+<div class="subtitle">Podium Integration</div>
 <div class="form-group">
 <label>Server URL</label>
 <input type="text" id="serverUrl" value="https://hydr801-backend-production-2c14.up.railway.app">
 </div>
-
 <button class="btn btn-primary" onclick="testConnection()">Test Connection</button>
-<button class="btn btn-orange" onclick="testGHL()" style="margin-left:10px">Test GHL API</button>
-
+<button class="btn btn-purple" onclick="testPodium()">Test Podium API</button>
 <div id="result"></div>
 </div>
-
 <div class="card">
 <h2>Patients</h2>
 <div id="patients" class="patients"></div>
-<button class="btn btn-orange" onclick="syncPatient()" style="margin-top:16px">Sync Test Patient to GHL</button>
+<button class="btn btn-purple" onclick="syncPatient()" style="margin-top:16px">Sync Patient to Podium</button>
 <div id="syncResult"></div>
 </div>
 </div>
-
 <script>
-var patients = [
-    {id:1, name:'Sarah Johnson', email:'sarah.j@email.com', ghlId:null},
-    {id:2, name:'Michael Chen', email:'mchen@email.com', ghlId:null},
-    {id:3, name:'Emily Rodriguez', email:'emily.r@email.com', ghlId:null}
-];
-
-function renderPatients() {
-    var html = '';
-    for (var i = 0; i < patients.length; i++) {
-        var p = patients[i];
-        html += '<div class="patient"><div><div class="patient-info">' + p.name + '</div><div class="patient-email">' + p.email + '</div></div><span class="tag ' + (p.ghlId ? 'tag-synced' : 'tag-pending') + '">' + (p.ghlId ? 'Synced' : 'Not synced') + '</span></div>';
-    }
-    document.getElementById('patients').innerHTML = html;
-}
-
-function testConnection() {
-    var url = document.getElementById('serverUrl').value;
-    document.getElementById('result').innerHTML = '<div class="status status-warn">Testing...</div>';
-    
-    fetch(url + '/api/health')
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.status === 'ok') {
-                document.getElementById('result').innerHTML = '<div class="status status-ok">✓ Server Connected!</div>';
-            } else {
-                document.getElementById('result').innerHTML = '<div class="status status-err">✗ Unexpected response</div>';
-            }
-        })
-        .catch(function(err) {
-            document.getElementById('result').innerHTML = '<div class="status status-err">✗ Connection failed: ' + err.message + '</div>';
-        });
-}
-
-function testGHL() {
-    var url = document.getElementById('serverUrl').value;
-    document.getElementById('result').innerHTML = '<div class="status status-warn">Testing GHL...</div>';
-    
-    fetch(url + '/api/ghl/contacts')
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.contacts) {
-                document.getElementById('result').innerHTML = '<div class="status status-ok">✓ GHL Connected! Found ' + data.contacts.length + ' contacts</div>';
-            } else if (data.error) {
-                document.getElementById('result').innerHTML = '<div class="status status-err">✗ GHL Error: ' + data.error + '</div>';
-            } else {
-                document.getElementById('result').innerHTML = '<div class="status status-warn">Response: ' + JSON.stringify(data).substring(0, 100) + '</div>';
-            }
-        })
-        .catch(function(err) {
-            document.getElementById('result').innerHTML = '<div class="status status-err">✗ GHL failed: ' + err.message + '</div>';
-        });
-}
-
-function syncPatient() {
-    var url = document.getElementById('serverUrl').value;
-    var p = patients[0];
-    document.getElementById('syncResult').innerHTML = '<div class="status status-warn">Syncing...</div>';
-    
-    fetch(url + '/api/ghl/contacts', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            firstName: 'Sarah',
-            lastName: 'Johnson',
-            email: p.email,
-            phone: '8015550123',
-            tags: ['Hydr801', 'EMR Patient'],
-            source: 'Hydr801 EMR'
-        })
-    })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        if (data.contact) {
-            patients[0].ghlId = data.contact.id;
-            renderPatients();
-            document.getElementById('syncResult').innerHTML = '<div class="status status-ok">✓ Patient synced to GHL!</div>';
-        } else {
-            document.getElementById('syncResult').innerHTML = '<div class="status status-err">✗ Sync failed: ' + JSON.stringify(data) + '</div>';
-        }
-    })
-    .catch(function(err) {
-        document.getElementById('syncResult').innerHTML = '<div class="status status-err">✗ Sync error: ' + err.message + '</div>';
-    });
-}
-
+var patients = [{id:1,name:'Sarah Johnson',email:'sarah.j@email.com',phone:'8015550123',podiumId:null},{id:2,name:'Michael Chen',email:'mchen@email.com',phone:'8015550456',podiumId:null},{id:3,name:'Emily Rodriguez',email:'emily.r@email.com',phone:'8015550789',podiumId:null}];
+function renderPatients(){var h='';for(var i=0;i<patients.length;i++){var p=patients[i];h+='<div class="patient"><div><div class="patient-info">'+p.name+'</div><div class="patient-email">'+p.email+'</div></div><span class="tag '+(p.podiumId?'tag-synced':'tag-pending')+'">'+(p.podiumId?'Synced':'Not synced')+'</span></div>';}document.getElementById('patients').innerHTML=h;}
+function testConnection(){var url=document.getElementById('serverUrl').value;document.getElementById('result').innerHTML='<div class="status status-warn">Testing...</div>';fetch(url+'/api/health').then(function(r){return r.json();}).then(function(d){if(d.status==='ok'){document.getElementById('result').innerHTML='<div class="status status-ok">✓ Connected! Service: '+d.service+'</div>';}else{document.getElementById('result').innerHTML='<div class="status status-err">✗ Error</div>';}}).catch(function(e){document.getElementById('result').innerHTML='<div class="status status-err">✗ Failed: '+e.message+'</div>';});}
+function testPodium(){var url=document.getElementById('serverUrl').value;document.getElementById('result').innerHTML='<div class="status status-warn">Testing Podium...</div>';fetch(url+'/api/podium/contacts').then(function(r){return r.json();}).then(function(d){if(d.data||d.contacts||Array.isArray(d)){document.getElementById('result').innerHTML='<div class="status status-ok">✓ Podium Connected!</div>';}else if(d.error){document.getElementById('result').innerHTML='<div class="status status-err">✗ '+d.error+'</div>';}else{document.getElementById('result').innerHTML='<div class="status status-warn">Response: '+JSON.stringify(d).substring(0,100)+'</div>';}}).catch(function(e){document.getElementById('result').innerHTML='<div class="status status-err">✗ '+e.message+'</div>';});}
+function syncPatient(){var url=document.getElementById('serverUrl').value;document.getElementById('syncResult').innerHTML='<div class="status status-warn">Syncing...</div>';fetch(url+'/api/podium/contacts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:'Sarah',lastName:'Johnson',email:'sarah.j@email.com',phone:'8015550123'})}).then(function(r){return r.json();}).then(function(d){if(d.uid||d.data||d.id){patients[0].podiumId='synced';renderPatients();document.getElementById('syncResult').innerHTML='<div class="status status-ok">✓ Synced!</div>';}else{document.getElementById('syncResult').innerHTML='<div class="status status-warn">'+JSON.stringify(d).substring(0,100)+'</div>';}}).catch(function(e){document.getElementById('syncResult').innerHTML='<div class="status status-err">✗ '+e.message+'</div>';});}
 renderPatients();
 </script>
 </body>
 </html>
+```
+
+3. Click **Commit changes**
+
+---
+
+Then open:
+```
+https://amyshiramizu.github.io/hydr801-backend/
