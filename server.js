@@ -35,7 +35,7 @@ function ghlRequest(path, method, body, callback) {
 }
 
 app.get('/', function(req, res) {
-  res.json({ status: 'Hydr801 Backend Running' });
+  res.send('OK');
 });
 
 app.get('/api/health', function(req, res) {
@@ -72,7 +72,10 @@ app.post('/api/ghl/contacts/:id/tags', function(req, res) {
   });
 });
 
-var PORT = process.env.PORT || 3001;
-app.listen(PORT, function() {
+var PORT = process.env.PORT || 8080;
+var server = app.listen(PORT, '0.0.0.0', function() {
   console.log('Server running on port ' + PORT);
 });
+
+server.keepAliveTimeout = 120000;
+server.headersTimeout = 120000;
